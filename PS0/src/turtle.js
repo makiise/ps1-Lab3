@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SimpleTurtle = void 0;
 // A very basic, in-memory Turtle implementation for Problem Set 0.
+
 var SimpleTurtle = /** @class */ (function () {
     function SimpleTurtle(startX, startY) {
         if (startX === void 0) { startX = 0; }
