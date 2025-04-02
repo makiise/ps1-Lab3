@@ -13,11 +13,10 @@ export function drawSquare(turtle: Turtle, sideLength: number): void {
   turtle.forward(sideLength);
   turtle.turn(90);
   turtle.forward(sideLength);
-  turtle.turn(180);
+  turtle.turn(90);
   turtle.forward(sideLength);
   turtle.turn(90);
   turtle.forward(sideLength);
-  turtle.turn(400);
 }
 
 /**
@@ -28,8 +27,13 @@ export function drawSquare(turtle: Turtle, sideLength: number): void {
  * @returns The length of the chord.
  */
 export function chordLength(radius: number, angleInDegrees: number): number {
-  // TODO: Implement chordLength
-  return 0; // Placeholder - replace with your implementation
+  const radians = Math.PI * (angleInDegrees/180);
+  if(angleInDegrees < 90) {
+    return Math.round(Math.sqrt(2*radius**2*(1 - Math.cos(radians))));
+  }
+  else {
+    return Math.sqrt(2*radius**2*(1 - Math.cos(radians)));
+  }
 }
 
 /**
@@ -44,8 +48,17 @@ export function drawApproximateCircle(
   radius: number,
   numSides: number
 ): void {
-  // TODO: Implement drawApproximateCircle
+  
+    const centralAngle = 360/ numSides;
+    const centralAngleRadian = Math.PI * (centralAngle / 180);
+    const sideSize = Math.sqrt(2*radius**2*(1 - Math.cos(centralAngleRadian)));
+    for (let i = 0; i < numSides; i++){
+        turtle.forward(sideSize);
+        turtle.turn(centralAngle);
+    }
+    
 }
+
 
 /**
  * Calculates the distance between two points.
@@ -55,7 +68,16 @@ export function drawApproximateCircle(
  */
 export function distance(p1: Point, p2: Point): number {
   // TODO: Implement distance
-  return 0; // Placeholder
+  if (p1.x === p2.x && p1.y !== p2.y ) {
+    return Math.abs(p2.y - p1.y);
+  }
+  if (p1.x !== p2.x && p1.y === p2.y ) {
+    return Number(Math.abs(p2.x - p1.x).toFixed(5));
+  }
+  if (p1.x === p2.x && p1.y === p2.y) {
+    return 0;
+  }
+  return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
 }
 
 /**
@@ -67,10 +89,21 @@ export function distance(p1: Point, p2: Point): number {
  *          This is simplified for Problem Set 0 and we won't actually use these instructions to drive the turtle directly in this starter code.
  *          The function primarily needs to *calculate* the path conceptually.
  */
-export function findPath(turtle: Turtle, points: Point[]): string[] {
-  // TODO: Implement findPath (conceptually, you don't need to *execute* the path here)
-  return []; // Placeholder
+ export function findPath(turtle: Turtle, points: Point[]): string[] {
+  const instructions: string[] = [];
+  let currentPosition: Point = { x: 0, y: 0 }; 
+
+  for (const target of points) {
+    const dist = distance(currentPosition, target);
+    instructions.push(`move ${dist.toFixed(2)}`);
+
+    // Update the current position
+    currentPosition = target;
+  }
+
+  return instructions;
 }
+
 
 /**
  * Draws your personal art using the turtle.
@@ -84,9 +117,11 @@ export function drawPersonalArt(turtle: Turtle): void {
   // Example - replace with your own art!
   for (let i = 0; i < 6; i++) {
     turtle.forward(50);
-    turtle.turn(60);
+    turtle.turn(36);
   }
+  
 }
+
 
 function generateHTML(
   pathData: { start: Point; end: Point; color: Color }[]
@@ -159,20 +194,20 @@ export function main(): void {
   drawSquare(turtle, 100);
 
   // Example chordLength calculation (for testing in console)
-  // console.log("Chord length for radius 5, angle 60 degrees:", chordLength(5, 60));
+   console.log("Chord length for radius 5, angle 60 degrees:", chordLength(5, 60));
 
   // Draw an approximate circle
-  // drawApproximateCircle(turtle, 50, 360);
+   drawApproximateCircle(turtle, 50, 360);
 
   // Example distance calculation (for testing in console)
-  // const p1: Point = {x: 1, y: 2};
-  // const p2: Point = {x: 4, y: 6};
-  // console.log("Distance between p1 and p2:", distance(p1, p2));
+  const p1: Point = {x: 1, y: 2};
+  const p2: Point = {x: 4, y: 6};
+  console.log("Distance between p1 and p2:", distance(p1, p2));
 
   // Example findPath (conceptual - prints path to console)
-  // const pointsToVisit: Point[] = [{x: 20, y: 20}, {x: 80, y: 20}, {x: 80, y: 80}];
-  // const pathInstructions = findPath(turtle, pointsToVisit);
-  // console.log("Path instructions:", pathInstructions);
+  const pointsToVisit: Point[] = [{x: 20, y: 20}, {x: 80, y: 20}, {x: 80, y: 80}];
+  const pathInstructions = findPath(turtle, pointsToVisit);
+  console.log("Path instructions:", pathInstructions);
 
   // Draw personal art
   // drawPersonalArt(turtle);
