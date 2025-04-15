@@ -19,8 +19,20 @@ import { Flashcard, AnswerDifficulty, BucketMap } from "./flashcards";
  * @spec.requires buckets is a valid representation of flashcard buckets.
  */
 export function toBucketSets(buckets: BucketMap): Array<Set<Flashcard>> {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  const array_of_sets : Array<Set<Flashcard>> = [];
+  const max = Math.max(...Array.from(buckets.keys()));
+
+
+  for( let i = 0 ; i <= max; i++){
+    const bucket = buckets.get(i);
+    if(bucket){
+      array_of_sets[i] = new Set(bucket);
+    }
+    else{
+      array_of_sets[i] = new Set();
+    }
+  }
+  return array_of_sets;
 }
 
 /**
@@ -31,12 +43,28 @@ export function toBucketSets(buckets: BucketMap): Array<Set<Flashcard>> {
  *          or undefined if no buckets contain cards.
  * @spec.requires buckets is a valid Array-of-Set representation of flashcard buckets.
  */
-export function getBucketRange(
+ export function getBucketRange(
   buckets: Array<Set<Flashcard>>
 ): { minBucket: number; maxBucket: number } | undefined {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  const range: number[] = [];
+
+  for (let i = 0; i < buckets.length; i++) {
+    const bucket = buckets[i];
+    if (bucket && bucket.size > 0 ) {
+      range.push(i);
+    }
+  }
+
+  if (range.length === 0) {
+    return undefined;
+  }
+
+  const minBucket = Math.min(...range);
+  const maxBucket = Math.max(...range);
+
+  return { minBucket, maxBucket };
 }
+
 
 /**
  * Selects cards to practice on a particular day.
@@ -51,27 +79,52 @@ export function practice(
   buckets: Array<Set<Flashcard>>,
   day: number
 ): Set<Flashcard> {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  let practice_cards = new Set<Flashcard>();
+
+  for(let i = 0; i <= day; i++){
+    let bucket = buckets[i];
+    if(bucket){
+      bucket.forEach(card => practice_cards.add(card));
+
+    }
+  }
+  return practice_cards;
 }
 
-/**
- * Updates a card's bucket number after a practice trial.
- *
- * @param buckets Map representation of learning buckets.
- * @param card flashcard that was practiced.
- * @param difficulty how well the user did on the card in this practice trial.
- * @returns updated Map of learning buckets.
- * @spec.requires buckets is a valid representation of flashcard buckets.
- */
 export function update(
   buckets: BucketMap,
   card: Flashcard,
   difficulty: AnswerDifficulty
 ): BucketMap {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  for (let [mark, bucket] of buckets.entries()) {
+    if (bucket.has(card)) {
+      bucket.delete(card);
+
+      let newmark = mark;
+
+      switch (difficulty) {
+        case AnswerDifficulty.Wrong:
+          newmark = 0;
+          break;
+        case AnswerDifficulty.Hard:
+          break;
+        case AnswerDifficulty.Easy:
+          newmark = Math.min(mark + 1, buckets.size - 1);
+          break;
+      }
+
+      if (!buckets.has(newmark)) {
+        buckets.set(newmark, new Set());
+      }
+      buckets.get(newmark)!.add(card);
+      
+      break;
+    }
+  }
+
+  return buckets;
 }
+
 
 /**
  * Generates a hint for a flashcard.
@@ -81,8 +134,7 @@ export function update(
  * @spec.requires card is a valid Flashcard.
  */
 export function getHint(card: Flashcard): string {
-  // TODO: Implement this function (and strengthen the spec!)
-  throw new Error("Implement me!");
+  return card.hint;
 }
 
 /**
@@ -93,8 +145,57 @@ export function getHint(card: Flashcard): string {
  * @returns statistics about learning progress.
  * @spec.requires [SPEC TO BE DEFINED]
  */
-export function computeProgress(buckets: any, history: any): any {
-  // Replace 'any' with appropriate types
-  // TODO: Implement this function (and define the spec!)
-  throw new Error("Implement me!");
+ export function computeProgress(
+  buckets: Map<number, Set<Flashcard>>,
+  history: Array<{
+    card: Flashcard;
+    difficulty: AnswerDifficulty;
+    day: number;
+  }>
+): {
+  totalCards: number;
+  cardsPerBucket: Map<number, number>;
+  correctRatio: number;
+  mediumRatio: number;
+  hardRatio: number;
+} {
+  let totalCards = 0;
+  const cardsPerBucket = new Map<number, number>();
+
+  for (const [bucketNumber, cardSet] of buckets.entries()) {
+    const count = cardSet.size;
+    cardsPerBucket.set(bucketNumber, count);
+    totalCards += count;
+  }
+
+  let easy = 0;
+  let hard = 0;
+  let wrong = 0;
+
+  for (const entry of history) {
+    switch (entry.difficulty) {
+      case AnswerDifficulty.Easy:
+        easy++;
+        break;
+      case AnswerDifficulty.Hard:
+        hard++;
+        break;
+      case AnswerDifficulty.Wrong:
+        wrong++;
+        break;
+    }
+  }
+
+  const totalAttempts = easy + hard + wrong;
+  const correctRatio = totalAttempts > 0 ? easy / totalAttempts : 0;
+  const mediumRatio = totalAttempts > 0 ? hard / totalAttempts : 0;
+  const hardRatio = totalAttempts > 0 ? wrong / totalAttempts : 0;
+
+  return {
+    totalCards,
+    cardsPerBucket,
+    correctRatio,
+    mediumRatio,
+    hardRatio,
+  };
 }
